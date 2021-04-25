@@ -30,6 +30,10 @@
     "url": "https://github.com/jurios/typecli/issues"
   },
   "homepage": "https://github.com/jurios/typecli#readme",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
   "dependencies": {
     "arg": "^5.0.0",
     "chalk": "^4.1.0",
