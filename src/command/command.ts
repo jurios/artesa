@@ -131,21 +131,17 @@ export abstract class Command {
   }
 
   protected help(): void {
-    const options: INormalizedOption[] = this.getOptions().map((option) =>
-      getNormalizedOption(option),
-    );
-    const args: INormalizedArgument[] = this.getArguments().map((arg) =>
-      getNormalizedArgument(arg),
-    );
-
     this.io.write(`${this.name}: `, { bold: true, color: [217, 119, 6] });
     this.io.writeLn(this.description);
-    this.io.writeLn(`${chalk.bold(`Usage:`)} ${this.getSignature(args, options)}`);
+    this.io.writeLn(`${chalk.bold(`Usage:`)} ${this.getSignature()}`);
     this.io.space();
-    if (args.length > 0) {
+    if (this.argumentDefs.length > 0) {
       this.io.writeLn('Command arguments:');
       const paragraph: Paragraph = transformToColumnedLayout(
-        args.map((arg) => [arg.name + (args[0].required ? chalk.red('*') : ''), arg.description]),
+        this.argumentDefs.map((arg) => [
+          arg.name + (arg.required ? chalk.red('*') : ''),
+          arg.description,
+        ]),
       );
       paragraph.forEach((line) => {
         this.io.write(' '.repeat(2) + line[0], { bold: true });
@@ -154,11 +150,11 @@ export abstract class Command {
       this.io.space();
     }
 
-    if (options.length > 0) {
+    if (this.optionDefs.length > 0) {
       this.io.writeLn('Available options:');
 
       const paragraph: Paragraph = transformToColumnedLayout(
-        options.map((opt) => [[opt.name].concat(opt.aliases).join(','), opt.description]),
+        this.optionDefs.map((opt) => [[opt.name].concat(opt.aliases).join(','), opt.description]),
       );
 
       paragraph.forEach((line) => {
@@ -171,9 +167,9 @@ export abstract class Command {
     }
   }
 
-  protected getSignature(args: INormalizedArgument[], options: INormalizedOption[]): string {
-    return `${this.name} ${args.map((arg) => `[${arg.name}]`).join('')}${
-      options.length > 0 ? ' [options...]' : ''
+  protected getSignature(): string {
+    return `${this.name} ${this.argumentDefs.map((arg) => `[${arg.name}]`).join('')}${
+      this.optionDefs.length > 0 ? ' [options...]' : ''
     }`;
   }
 }
