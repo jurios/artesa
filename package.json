@@ -1,5 +1,5 @@
 {
-  "name": "typecli",
+  "name": "artesa",
   "version": "0.3.0",
   "description": "",
   "main": "dist/index.js",
@@ -22,15 +22,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jurios/typecli.git"
+    "url": "git+https://github.com/jurios/artesa.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jurios/typecli/issues"
+    "url": "https://github.com/jurios/artesa/issues"
   },
-  "homepage": "https://github.com/jurios/typecli#readme",
+  "homepage": "https://github.com/jurios/artesa#readme",
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts"

@@ -1,5 +1,5 @@
-# TypeCLI
-TypeCLI is a NodeJS class-oriented complete solution for creating command line interfaces. It's strongly influenced by
+# Artesa (Artesà)
+*Artesà* is a NodeJS class-oriented complete solution for creating command line interfaces. It's strongly influenced by
 [Laravel artisan CLI](https://laravel.com/docs/8.x/artisan#introduction)
 
 **Note! This project is early WIP. Documentation is not available yet.**
