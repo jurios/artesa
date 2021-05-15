@@ -11,9 +11,9 @@ import { CommandValidationException } from '../exceptions/command-validation.exc
 import { NormalizedOptionsValidator } from './validators/normalized-options.validator';
 import { ArgumentBag, OptionBag } from './input/bag/bag';
 
-export type CommandClass = new (io: IInputOutput) => Command;
+export type CommandClass = new (io: IInputOutput) => AbstractCommand;
 
-export abstract class Command {
+export abstract class AbstractCommand {
   abstract name: string;
   abstract description: string;
 

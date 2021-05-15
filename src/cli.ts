@@ -1,4 +1,4 @@
-import { Command, CommandClass } from './command/command';
+import { AbstractCommand, CommandClass } from './command/abstract-command';
 import * as arg from 'arg';
 import { CommandNotFoundException } from './exceptions/command-not-found.exception';
 import { IInputOutput } from './io/input-output.interface';
@@ -118,7 +118,7 @@ export class CLI {
     const map: Map<string, ICommandInfo> = new Map<string, ICommandInfo>();
 
     commandClasses.forEach((commandClass) => {
-      const instance: Command = this.instanceCommand(commandClass);
+      const instance: AbstractCommand = this.instanceCommand(commandClass);
       instance.validate();
       map.set(instance.name, {
         name: instance.name,
@@ -130,7 +130,7 @@ export class CLI {
     return map;
   }
 
-  protected instanceCommand(commandClass: CommandClass): Command {
+  protected instanceCommand(commandClass: CommandClass): AbstractCommand {
     return new commandClass(this.io);
   }
 

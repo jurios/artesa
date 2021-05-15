@@ -1,11 +1,11 @@
 import { CLI, ICommandInfo } from './cli';
-import { Command } from './command/command';
+import { AbstractCommand } from './command/abstract-command';
 import { CommandNotFoundException } from './exceptions/command-not-found.exception';
 import { getMockedOutput } from '../tests/fixtures/output';
 import { IInputOutput } from './io/input-output.interface';
 
 describe(CLI.name, () => {
-  class TestCommand extends Command {
+  class TestCommand extends AbstractCommand {
     description = 'description command';
     name = 'command:name';
 
