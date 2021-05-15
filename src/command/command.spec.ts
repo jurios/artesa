@@ -1,7 +1,7 @@
 import { Command } from './command';
 import { getMockedOutput } from '../../tests/fixtures/output';
 import { IInputOutput } from '../io/input-output.interface';
-import { ArgumentBag, OptionBag } from './bag/bag';
+import { ArgumentBag, OptionBag } from './input/bag/bag';
 
 describe(Command.name, () => {
   class TestCommand extends Command {

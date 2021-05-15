@@ -1,5 +1,5 @@
 import { CommandValidationException } from '../../exceptions/command-validation.exception';
-import { INormalizedOption } from '../option';
+import { INormalizedOption } from '../input/option';
 
 export class NormalizedOptionsValidator {
   static validate(optsDef: INormalizedOption[]): void {

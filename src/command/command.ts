@@ -1,15 +1,15 @@
-import { getNormalizedOption, INormalizedOption, IOption } from './option';
-import { getNormalizedArgument, IArgument, INormalizedArgument } from './argument';
+import { getNormalizedOption, INormalizedOption, IOption } from './input/option';
+import { getNormalizedArgument, IArgument, INormalizedArgument } from './input/argument';
 import { IInputOutput } from '../io/input-output.interface';
 import * as chalk from 'chalk';
 import { Paragraph, transformToColumnedLayout } from '../io/helpers/layout';
-import { InputParser } from './input-parser';
+import { InputParser } from './input/input-parser';
 import { CommandException } from '../exceptions/command.exception';
 import { CLIException } from '../exceptions/cli.exception';
 import { NormalizedArgumentsValidator } from './validators/normalized-arguments.validator';
 import { CommandValidationException } from '../exceptions/command-validation.exception';
 import { NormalizedOptionsValidator } from './validators/normalized-options.validator';
-import { ArgumentBag, OptionBag } from './bag/bag';
+import { ArgumentBag, OptionBag } from './input/bag/bag';
 
 export type CommandClass = new (io: IInputOutput) => Command;
 

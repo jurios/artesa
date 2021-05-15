@@ -1,6 +1,6 @@
 import { CommandValidationException } from '../../exceptions/command-validation.exception';
 import { NormalizedOptionsValidator } from './normalized-options.validator';
-import { INormalizedOption } from '../option';
+import { INormalizedOption } from '../input/option';
 
 describe(NormalizedOptionsValidator.name, () => {
   describe('validate()', () => {

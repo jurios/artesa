@@ -1,7 +1,7 @@
 import { InputParser } from './input-parser';
-import { createMockINormalizedArgument } from '../../tests/helpers';
+import { createMockINormalizedArgument } from '../../../tests/helpers';
 import { INormalizedArgument } from './argument';
-import { InputArgumentException } from '../exceptions/input-argument.exception';
+import { InputArgumentException } from '../../exceptions/input-argument.exception';
 
 describe(InputParser.name, () => {
   describe('arguments', () => {

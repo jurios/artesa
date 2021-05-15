@@ -3,7 +3,7 @@ import { INormalizedOption } from './option';
 import * as arg from 'arg';
 import { buildArgSpec } from './utils/arg-spec-builder';
 import { ArgError } from 'arg';
-import { InputArgumentException } from '../exceptions/input-argument.exception';
+import { InputArgumentException } from '../../exceptions/input-argument.exception';
 import { ArgumentBag, OptionBag } from './bag/bag';
 
 export class InputParser {

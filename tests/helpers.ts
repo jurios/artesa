@@ -1,4 +1,4 @@
-import {IArgument, INormalizedArgument} from "../src/command/argument";
+import {IArgument, INormalizedArgument} from "../src/command/input/argument";
 
 export function createMockINormalizedArgument(name: string): INormalizedArgument {
     return {

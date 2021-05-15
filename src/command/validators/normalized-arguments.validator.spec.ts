@@ -1,5 +1,5 @@
 import { NormalizedArgumentsValidator } from './normalized-arguments.validator';
-import { INormalizedArgument } from '../argument';
+import { INormalizedArgument } from '../input/argument';
 import { CommandValidationException } from '../../exceptions/command-validation.exception';
 
 describe(NormalizedArgumentsValidator.name, () => {
