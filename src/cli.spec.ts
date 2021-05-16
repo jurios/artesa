@@ -1,8 +1,9 @@
-import { CLI, ICommandInfo } from './cli';
+import { CLI } from './cli';
 import { Command } from './command/command';
 import { CommandNotFoundException } from './exceptions/command-not-found.exception';
 import { getMockedOutput } from '../tests/fixtures/output';
 import { IInputOutput } from './io/input-output.interface';
+import { CommandValidationException } from './exceptions/command-validation.exception';
 
 describe(CLI.name, () => {
   class TestCommand extends Command {
@@ -19,18 +20,31 @@ describe(CLI.name, () => {
 
   beforeEach(() => {
     io = getMockedOutput();
-    cli = new CLI([TestCommand], io);
+    cli = new CLI(
+      {
+        'command:name': TestCommand,
+      },
+      io,
+    );
   });
 
-  describe('constructor()', () => {
-    it('should register the command to the command map', () => {
-      const commandInstance: TestCommand = new TestCommand(io);
-
-      expect(cli.commands.get(commandInstance.name)).toStrictEqual<ICommandInfo>({
-        name: commandInstance.name,
-        description: commandInstance.description,
-        commandClass: TestCommand,
+  describe('constructor', () => {
+    it('should throw an exception if a command is not valid', () => {
+      jest.spyOn(TestCommand.prototype, 'validate').mockImplementation(() => {
+        throw new CommandValidationException('');
       });
+
+      const t = () => {
+        cli = new CLI(
+          {
+            'command:name': TestCommand,
+          },
+          io,
+        );
+      };
+
+      expect(t).toThrow(CommandValidationException);
+      jest.restoreAllMocks();
     });
   });
 
@@ -75,7 +89,7 @@ describe(CLI.name, () => {
 
       await cli.parse(['command:name', 'argument', '--help']);
 
-      expect(spy).toHaveBeenCalledWith(['argument', '--help']);
+      expect(spy).toHaveBeenCalledWith('command:name', ['argument', '--help']);
     });
 
     it('should return the value returned by the command handler', async () => {

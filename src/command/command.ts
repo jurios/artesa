@@ -6,17 +6,13 @@ import { Paragraph, transformToColumnedLayout } from '../io/helpers/layout';
 import { InputParser } from './input/input-parser';
 import { CommandException } from '../exceptions/command.exception';
 import { CLIException } from '../exceptions/cli.exception';
-import { NormalizedArgumentsValidator } from './validators/normalized-arguments.validator';
-import { CommandValidationException } from '../exceptions/command-validation.exception';
-import { NormalizedOptionsValidator } from './validators/normalized-options.validator';
 import { ArgumentBag, OptionBag } from './input/bag/bag';
+import { NormalizedArgumentsValidator } from './validators/normalized-arguments.validator';
+import { NormalizedOptionsValidator } from './validators/normalized-options.validator';
 
 export type CommandClass = new (io: IInputOutput) => Command;
 
 export abstract class Command {
-  abstract name: string;
-  abstract description: string;
-
   protected readonly optionDefs: INormalizedOption[];
   protected readonly argumentDefs: INormalizedArgument[];
 
@@ -28,14 +24,15 @@ export abstract class Command {
   /**
    * Parse input and executes the command
    *
+   * @param route
    * @param argv
    */
-  public async parse(argv: string[]): Promise<number> {
+  public async parse(route: string, argv: string[]): Promise<number> {
     try {
       const [argumentBag, optionBag] = InputParser.parse(argv, this.argumentDefs, this.optionDefs);
 
       if (optionBag.has('--help')) {
-        this.help();
+        this.help(route);
         return 0;
       }
 
@@ -54,7 +51,7 @@ export abstract class Command {
       // When the exception is because command has not been called correctly,
       // help must be showed
       if (e instanceof CommandException && e.printHelp) {
-        this.help();
+        this.help(route);
         return 1;
       }
 
@@ -81,7 +78,7 @@ export abstract class Command {
   }
 
   /**
-   * returns command argument list
+   * Returns command argument list
    * @protected
    */
   public getArguments(): IArgument[] {
@@ -89,18 +86,19 @@ export abstract class Command {
   }
 
   /**
+   * Returns command description
+   */
+  public getDescription(): string {
+    return '';
+  }
+
+  /**
    * Validates command option definitions and argument definitions. If it is not valid,
    * a CommandValidationException is thrown
    */
   public validate(): void {
-    try {
-      NormalizedArgumentsValidator.validate(this.argumentDefs);
-      NormalizedOptionsValidator.validate(this.optionDefs);
-    } catch (e) {
-      if (e instanceof CommandValidationException) {
-        throw new CommandValidationException(`${this.name}: ${e.message}`);
-      }
-    }
+    NormalizedArgumentsValidator.validate(this.argumentDefs);
+    NormalizedOptionsValidator.validate(this.optionDefs);
   }
 
   /**
@@ -130,10 +128,10 @@ export abstract class Command {
     return this.getArguments().map((arg) => getNormalizedArgument(arg));
   }
 
-  protected help(): void {
-    this.io.write(`${this.name}: `, { bold: true, color: [217, 119, 6] });
-    this.io.writeLn(this.description);
-    this.io.writeLn(`${chalk.bold(`Usage:`)} ${this.getSignature()}`);
+  protected help(route: string): void {
+    this.io.write(`${route}: `, { bold: true, color: [217, 119, 6] });
+    this.io.writeLn(this.getDescription());
+    this.io.writeLn(`${chalk.bold(`Usage:`)} ${this.getSignature(route)}`);
     this.io.space();
     if (this.argumentDefs.length > 0) {
       this.io.writeLn('Command arguments:');
@@ -167,8 +165,8 @@ export abstract class Command {
     }
   }
 
-  protected getSignature(): string {
-    return `${this.name} ${this.argumentDefs.map((arg) => `[${arg.name}]`).join('')}${
+  protected getSignature(route: string): string {
+    return `${route} ${this.argumentDefs.map((arg) => `[${arg.name}]`).join('')}${
       this.optionDefs.length > 0 ? ' [options...]' : ''
     }`;
   }

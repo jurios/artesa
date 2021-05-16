@@ -6,21 +6,18 @@ import { InputOutput } from './io/input-output';
 import * as chalk from 'chalk';
 import { Paragraph, transformToColumnedLayout } from './io/helpers/layout';
 import { CLIException } from './exceptions/cli.exception';
+import { CommandValidationException } from './exceptions/command-validation.exception';
 
-export interface ICommandInfo {
-  name: string;
-  description: string;
-  commandClass: CommandClass;
-}
+type Routes = { [name: string]: CommandClass };
 
 export class CLI {
-  public readonly commands: Map<string, ICommandInfo>;
+  protected _commandInstances: Map<CommandClass, Command>;
 
   constructor(
-    commandClasses: CommandClass[],
+    public readonly routes: Routes,
     protected readonly io: IInputOutput = new InputOutput(),
   ) {
-    this.commands = this.registerCommands(commandClasses);
+    this._commandInstances = this.getCommandInstances();
   }
 
   /**
@@ -56,6 +53,29 @@ export class CLI {
     }
   }
 
+  protected getCommandInstances(): Map<CommandClass, Command> {
+    const result: Map<CommandClass, Command> = new Map<CommandClass, Command>();
+
+    Object.keys(this.routes).forEach((route) => {
+      const commandClass = this.routes[route];
+      if (!result.has(commandClass)) {
+        const instance: Command = new commandClass(this.io);
+
+        try {
+          instance.validate();
+        } catch (e) {
+          if (e instanceof CommandValidationException) {
+            throw new CommandValidationException(`${commandClass.name}: ${e.message}`);
+          }
+        }
+
+        result.set(commandClass, new commandClass(this.io));
+      }
+    });
+
+    return result;
+  }
+
   /**
    * Call a command registered by its name. If it does not exist, it throws an exception
    *
@@ -65,13 +85,11 @@ export class CLI {
    * @protected
    */
   protected async callCommand(commandName: string, argv: string[]): Promise<number> {
-    if (!this.commands.has(commandName)) {
-      throw new CommandNotFoundException(commandName);
+    if (this.routes[commandName] && this._commandInstances.has(this.routes[commandName])) {
+      return this._commandInstances.get(this.routes[commandName]).parse(commandName, argv);
     }
 
-    const commandClass: CommandClass = this.commands.get(commandName).commandClass;
-
-    return this.instanceCommand(commandClass).parse(argv);
+    throw new CommandNotFoundException(commandName);
   }
 
   /**
@@ -80,11 +98,10 @@ export class CLI {
    * @protected
    */
   public help(): void {
-    const commandsInfo: ICommandInfo[] = Array.from(this.commands.values());
-
     this.io.writeLn('CLI Help', { bold: true, color: [255, 255, 255] });
     this.io.writeLn('--------', { bold: true, color: [255, 255, 255] });
-    if (commandsInfo.length === 0) {
+
+    if (Object.keys(this.routes).length === 0) {
       this.io.writeLn('Commands not available.');
       return;
     }
@@ -94,7 +111,10 @@ export class CLI {
 
     this.io.writeLn('Available commands:');
     const paragraph: Paragraph = transformToColumnedLayout(
-      commandsInfo.map((command) => [command.name, command.description]),
+      Object.keys(this.routes).map((commandName) => [
+        commandName,
+        new this.routes[commandName](this.io).getDescription(),
+      ]),
     );
 
     paragraph.forEach((line) => {
@@ -106,32 +126,6 @@ export class CLI {
     this.io.writeLn(
       `(!) Tip: Run command with "--help" or "-h" option to show specific command help.`,
     );
-  }
-
-  /**
-   * Register commands to the current CLI
-   *
-   * @param commandClasses
-   * @protected
-   */
-  protected registerCommands(commandClasses: CommandClass[]): Map<string, ICommandInfo> {
-    const map: Map<string, ICommandInfo> = new Map<string, ICommandInfo>();
-
-    commandClasses.forEach((commandClass) => {
-      const instance: Command = this.instanceCommand(commandClass);
-      instance.validate();
-      map.set(instance.name, {
-        name: instance.name,
-        description: instance.description,
-        commandClass: commandClass,
-      });
-    });
-
-    return map;
-  }
-
-  protected instanceCommand(commandClass: CommandClass): Command {
-    return new commandClass(this.io);
   }
 
   /**
