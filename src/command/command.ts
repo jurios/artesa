@@ -19,6 +19,7 @@ export abstract class Command {
   constructor(protected readonly io: IInputOutput) {
     this.argumentDefs = this.getNormalizedArguments();
     this.optionDefs = this.getNormalizedOptions();
+    this.validate();
   }
 
   /**
@@ -129,12 +130,12 @@ export abstract class Command {
   }
 
   protected help(route: string): void {
-    this.io.write(`${route}: `, { bold: true, color: [217, 119, 6] });
-    this.io.writeLn(this.getDescription());
-    this.io.writeLn(`${chalk.bold(`Usage:`)} ${this.getSignature(route)}`);
+    this.io.write(`${route}`, { bold: true, color: [217, 119, 6] });
+    this.io.writeLn(`: ${this.getDescription()}`);
+    this.io.writeLn(`${' '.repeat(2)}${chalk.bold(`Usage:`)} ${this.getSignature(route)}`);
     this.io.space();
     if (this.argumentDefs.length > 0) {
-      this.io.writeLn('Command arguments:');
+      this.io.writeLn(`${' '.repeat(2)}Command arguments:`);
       const paragraph: Paragraph = transformToColumnedLayout(
         this.argumentDefs.map((arg) => [
           arg.name + (arg.required ? chalk.red('*') : ''),
@@ -142,22 +143,22 @@ export abstract class Command {
         ]),
       );
       paragraph.forEach((line) => {
-        this.io.write(' '.repeat(2) + line[0], { bold: true });
-        this.io.writeLn(' '.repeat(2) + line[1], { bold: false });
+        this.io.write(' '.repeat(4) + line[0], { bold: true });
+        this.io.writeLn(' '.repeat(4) + line[1], { bold: false });
       });
       this.io.space();
     }
 
     if (this.optionDefs.length > 0) {
-      this.io.writeLn('Available options:');
+      this.io.writeLn(`${' '.repeat(2)}Available options:`);
 
       const paragraph: Paragraph = transformToColumnedLayout(
         this.optionDefs.map((opt) => [[opt.name].concat(opt.aliases).join(','), opt.description]),
       );
 
       paragraph.forEach((line) => {
-        this.io.write(' '.repeat(2) + line[0], { bold: true });
-        this.io.writeLn(' '.repeat(2) + line[1], { bold: false });
+        this.io.write(' '.repeat(4) + line[0], { bold: true });
+        this.io.writeLn(' '.repeat(4) + line[1], { bold: false });
       });
 
       this.io.space();

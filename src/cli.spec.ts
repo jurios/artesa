@@ -3,7 +3,6 @@ import { Command } from './command/command';
 import { CommandNotFoundException } from './exceptions/command-not-found.exception';
 import { getMockedOutput } from '../tests/fixtures/output';
 import { IInputOutput } from './io/input-output.interface';
-import { CommandValidationException } from './exceptions/command-validation.exception';
 
 describe(CLI.name, () => {
   class TestCommand extends Command {
@@ -26,26 +25,6 @@ describe(CLI.name, () => {
       },
       io,
     );
-  });
-
-  describe('constructor', () => {
-    it('should throw an exception if a command is not valid', () => {
-      jest.spyOn(TestCommand.prototype, 'validate').mockImplementation(() => {
-        throw new CommandValidationException('');
-      });
-
-      const t = () => {
-        cli = new CLI(
-          {
-            'command:name': TestCommand,
-          },
-          io,
-        );
-      };
-
-      expect(t).toThrow(CommandValidationException);
-      jest.restoreAllMocks();
-    });
   });
 
   describe('parse()', () => {
