@@ -5,9 +5,9 @@ import { getNormalizedOption, INormalizedOption, IOption } from './input/option'
 import { getNormalizedArgument, IArgument, INormalizedArgument } from './input/argument';
 import { NormalizedArgumentsValidator } from './validators/normalized-arguments.validator';
 import { NormalizedOptionsValidator } from './validators/normalized-options.validator';
-import { Paragraph, transformToColumnedLayout } from '../io/helpers/layout';
 import * as chalk from 'chalk';
 import { CLIException } from '../exceptions/cli.exception';
+import { buildGrid } from '../io/helpers/layout';
 
 export type CommandClass = new (io: IInputOutput) => Command;
 
@@ -22,7 +22,7 @@ export abstract class Command {
   }
 
   /**
-   * Execute the command with the provided route name and input
+   * Execute the command with the provided route path and input
    *
    * @param route
    * @param argv
@@ -32,7 +32,7 @@ export abstract class Command {
       const [argumentBag, optionBag] = this.parse(argv);
 
       if (optionBag.has('--help')) {
-        this.help(route);
+        this.printHelp(route);
         return 0;
       }
 
@@ -90,7 +90,7 @@ export abstract class Command {
     // When the exception is because command has not been called correctly,
     // help must be showed
     if (err instanceof CLIException && err.printHelp) {
-      this.help(route);
+      this.printHelp(route);
       return 1;
     }
 
@@ -136,10 +136,23 @@ export abstract class Command {
     return this.getArguments().map((arg) => getNormalizedArgument(arg));
   }
 
-  protected printHelpSignature(route: string): void {
+  /**
+   * Prints command route path, description and its usage.
+   *
+   * @param route
+   * @protected
+   */
+  protected printHelpHeader(route: string): void {
+    // Generate command usage based on arguments and options expected
+    const generateUsage: (route: string) => string = (route: string) => {
+      return `${route} ${this.argumentDefs.map((arg) => `[${arg.name}]`).join('')}${
+        this.optionDefs.length > 0 ? ' [options...]' : ''
+      }`;
+    };
+
     this.io.write(`${route}`, { bold: true, color: [217, 119, 6] });
     this.io.writeLn(`: ${this.getDescription()}`);
-    this.io.writeLn(`${' '.repeat(2)}${chalk.bold(`Usage:`)} ${this.getSignature(route)}`);
+    this.io.writeLn(`${' '.repeat(2)}${chalk.bold(`Usage:`)} ${generateUsage(route)}`);
     this.io.space();
   }
 
@@ -149,19 +162,19 @@ export abstract class Command {
    * @param route
    * @protected
    */
-  protected help(route: string): void {
-    this.printHelpSignature(route);
+  protected printHelp(route: string): void {
+    this.printHelpHeader(route);
     if (this.argumentDefs.length > 0) {
       this.io.writeLn(`${' '.repeat(2)}Command arguments:`);
-      const paragraph: Paragraph = transformToColumnedLayout(
+
+      buildGrid(
         this.argumentDefs.map((arg) => [
           arg.name + (arg.required ? chalk.red('*') : ''),
           arg.description,
         ]),
-      );
-      paragraph.forEach((line) => {
-        this.io.write(' '.repeat(4) + line[0], { bold: true });
-        this.io.writeLn(' '.repeat(4) + line[1], { bold: false });
+      ).forEach((row) => {
+        this.io.write(' '.repeat(4) + row[0], { bold: true });
+        this.io.writeLn(' '.repeat(4) + row[1], { bold: false });
       });
       this.io.space();
     }
@@ -169,29 +182,15 @@ export abstract class Command {
     if (this.optionDefs.length > 0) {
       this.io.writeLn(`${' '.repeat(2)}Available options:`);
 
-      const paragraph: Paragraph = transformToColumnedLayout(
+      buildGrid(
         this.optionDefs.map((opt) => [[opt.name].concat(opt.aliases).join(','), opt.description]),
-      );
-
-      paragraph.forEach((line) => {
-        this.io.write(' '.repeat(4) + line[0], { bold: true });
-        this.io.writeLn(' '.repeat(4) + line[1], { bold: false });
+      ).forEach((row) => {
+        this.io.write(' '.repeat(4) + row[0], { bold: true });
+        this.io.writeLn(' '.repeat(4) + row[1], { bold: false });
       });
 
       this.io.space();
       this.io.writeLn(chalk.red('*') + ': Required argument');
     }
-  }
-
-  /**
-   * Generate command signature
-   *
-   * @param route
-   * @protected
-   */
-  protected getSignature(route: string): string {
-    return `${route} ${this.argumentDefs.map((arg) => `[${arg.name}]`).join('')}${
-      this.optionDefs.length > 0 ? ' [options...]' : ''
-    }`;
   }
 }

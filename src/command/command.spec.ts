@@ -25,7 +25,9 @@ describe(Command.name, () => {
 
   describe('run()', () => {
     it('should call help() and return 0 if -h or --help is provided', async () => {
-      const mock: jest.Mock = (TestCommand.prototype['help'] = jest.fn().mockReturnValue(null));
+      const mock: jest.Mock = (TestCommand.prototype['printHelp'] = jest
+        .fn()
+        .mockReturnValue(null));
 
       await command.run('test:command', ['-h']);
       await command.run('test:command', ['--help']);
@@ -43,12 +45,12 @@ describe(Command.name, () => {
     });
 
     it('should show an exception message and print help when an option is unknown', async () => {
-      command['help'] = jest.fn().mockReturnValue(null);
+      command['printHelp'] = jest.fn().mockReturnValue(null);
 
       const value: number = await command.run('test:command', ['--unknown']);
 
       expect(io.error).toHaveBeenCalledWith('Error: unknown or unexpected option: --unknown');
-      expect(command['help']).toHaveBeenCalled();
+      expect(command['printHelp']).toHaveBeenCalled();
       expect(value).toBe(1);
     });
 

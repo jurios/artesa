@@ -46,11 +46,11 @@ describe(CommandGroup.name, () => {
     });
 
     it('should print help if no subcommand is provided', async () => {
-      group['help'] = jest.fn().mockResolvedValue(0);
+      group['printHelp'] = jest.fn().mockResolvedValue(0);
 
       await group.run('group', []);
 
-      expect(group['help']).toHaveBeenCalledWith('group');
+      expect(group['printHelp']).toHaveBeenCalledWith('group');
     });
 
     it('should return 0 if no subcommand is provided', async () => {
@@ -60,11 +60,11 @@ describe(CommandGroup.name, () => {
     });
 
     it('should print help is subcommand provided is not in the route list', async () => {
-      group['help'] = jest.fn().mockResolvedValue(0);
+      group['printHelp'] = jest.fn().mockResolvedValue(0);
 
       await group.run('group', ['other']);
 
-      expect(group['help']).toHaveBeenCalledWith('group');
+      expect(group['printHelp']).toHaveBeenCalledWith('group');
     });
 
     it('should return 1 if subcommand provided is not in the route list', async () => {
