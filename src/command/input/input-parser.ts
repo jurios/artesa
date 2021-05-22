@@ -6,13 +6,24 @@ import { ArgError } from 'arg';
 import { InputArgumentException } from '../../exceptions/input-argument.exception';
 import { ArgumentBag, OptionBag } from './bag/bag';
 
+export type InputParserOptions = {
+  permissive?: boolean;
+};
 export class InputParser {
   public readonly arguments: ArgumentBag;
   public readonly options: OptionBag;
 
-  constructor(input: string[], argDefs: INormalizedArgument[], optDefs: INormalizedOption[]) {
+  constructor(
+    input: string[],
+    argDefs: INormalizedArgument[],
+    optDefs: INormalizedOption[],
+    options: InputParserOptions = {},
+  ) {
     try {
-      const result: arg.Result<arg.Spec> = arg(buildArgSpec(optDefs), { argv: input });
+      const result: arg.Result<arg.Spec> = arg(buildArgSpec(optDefs), {
+        argv: input,
+        permissive: options.permissive ?? false,
+      });
       this.arguments = new ArgumentBag(this.buildArguments(result, argDefs));
       this.options = new OptionBag(this.buildOptions(result, optDefs));
     } catch (e) {
@@ -115,13 +126,15 @@ export class InputParser {
    * @param input
    * @param argDefs
    * @param optDefs
+   * @param options
    */
   static parse(
     input: string[],
     argDefs: INormalizedArgument[],
     optDefs: INormalizedOption[],
+    options: InputParserOptions = {},
   ): [ArgumentBag, OptionBag] {
-    const parser: InputParser = new this(input, argDefs, optDefs);
+    const parser: InputParser = new this(input, argDefs, optDefs, options);
 
     return [parser.arguments, parser.options];
   }

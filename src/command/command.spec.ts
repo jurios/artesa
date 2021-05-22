@@ -5,9 +5,6 @@ import { ArgumentBag, OptionBag } from './input/bag/bag';
 
 describe(Command.name, () => {
   class TestCommand extends Command {
-    description = 'Test command';
-    name = 'command:name';
-
     handle(): Promise<number> {
       return Promise.resolve(0);
     }
@@ -19,7 +16,6 @@ describe(Command.name, () => {
   beforeEach(() => {
     io = getMockedOutput();
     jest.spyOn(TestCommand.prototype, 'handle').mockResolvedValue(0);
-
     command = new TestCommand(io);
   });
 
@@ -27,28 +23,29 @@ describe(Command.name, () => {
     jest.restoreAllMocks();
   });
 
-  describe('parse()', () => {
+  describe('run()', () => {
     it('should call help() and return 0 if -h or --help is provided', async () => {
-      command['help'] = jest.fn().mockReturnValue(null);
+      const mock: jest.Mock = (TestCommand.prototype['help'] = jest.fn().mockReturnValue(null));
 
-      await command.parse('test:command', ['-h']);
-      await command.parse('test:command', ['--help']);
+      await command.run('test:command', ['-h']);
+      await command.run('test:command', ['--help']);
 
-      expect(command['help']).toHaveBeenCalledTimes(2);
+      expect(mock).toHaveBeenCalledTimes(2);
+      mock.mockRestore();
     });
 
     it('should call to handle method', async () => {
       command = new TestCommand(io);
 
-      await command.parse('test:command', []);
+      await command.run('test:command', []);
 
       expect(command.handle).toHaveBeenCalledWith(new ArgumentBag(), new OptionBag());
     });
 
     it('should show an exception message and print help when an option is unknown', async () => {
-      command['help'] = jest.fn();
+      command['help'] = jest.fn().mockReturnValue(null);
 
-      const value: number = await command.parse('test:command', ['--unknown']);
+      const value: number = await command.run('test:command', ['--unknown']);
 
       expect(io.error).toHaveBeenCalledWith('Error: unknown or unexpected option: --unknown');
       expect(command['help']).toHaveBeenCalled();
@@ -58,9 +55,9 @@ describe(Command.name, () => {
     it('should show the exception message and its stack and return 1 when the exception is unknown', async () => {
       const error: Error = new Error('message');
       error.stack = 'stack';
-      command.handle = jest.fn().mockRejectedValue(error);
+      command['handle'] = jest.fn().mockRejectedValue(error);
 
-      const value: number = await command.parse('test:command', []);
+      const value: number = await command.run('test:command', []);
 
       expect(io.error).toHaveBeenCalledWith('Error: ' + error.message);
       expect(io.errLn).toHaveBeenCalledWith(error.stack);
