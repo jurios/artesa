@@ -1,6 +1,6 @@
-import { CommandGroup, Routes } from '../command/command-group';
-import { Command } from '../command/command';
+import { Command, CommandClass } from '../command/command';
 import { InputOutput } from './input-output';
+import { Routes } from '../router/routes';
 
 export type CommandHelpTree = { [route: string]: string | CommandHelpTree };
 
@@ -13,11 +13,12 @@ export function generateCommandHelpTree(routes: Routes): CommandHelpTree {
   const result: CommandHelpTree = {};
 
   Object.keys(routes).forEach((route) => {
-    const command: Command = new routes[route](new InputOutput());
-    result[route] =
-      command instanceof CommandGroup
-        ? generateCommandHelpTree(command.routes)
-        : command.getDescription();
+    if (typeof routes[route] === 'function') {
+      const command: Command = new (routes[route] as CommandClass)(new InputOutput());
+      result[route] = command.getDescription();
+    } else {
+      result[route] = generateCommandHelpTree(routes[route] as Routes);
+    }
   });
 
   return result;
