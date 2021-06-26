@@ -6,7 +6,6 @@ import { getNormalizedArgument, IArgument, INormalizedArgument } from './input/a
 import { NormalizedArgumentsValidator } from './validators/normalized-arguments.validator';
 import { NormalizedOptionsValidator } from './validators/normalized-options.validator';
 import * as chalk from 'chalk';
-import { CLIException } from '../exceptions/cli.exception';
 import { buildGrid } from '../io/helpers/layout';
 
 export type CommandClass = new (io: IInputOutput) => Command;
@@ -27,19 +26,14 @@ export abstract class Command {
    * @param route
    * @param argv
    */
-  public async run(route: string, argv: string[]): Promise<number> {
-    try {
-      const [argumentBag, optionBag] = this.parse(argv);
-
-      if (optionBag.has('--help')) {
-        this.printHelp(route);
-        return 0;
-      }
-
-      return await this.handle(argumentBag, optionBag);
-    } catch (e) {
-      return this.handleRuntimeError(route, e);
+  public async run(route: string[], argv: string[]): Promise<number> {
+    const [argumentBag, optionBag] = this.parse(argv);
+    if (optionBag.has('--help')) {
+      this.printHelp(route);
+      return 0;
     }
+
+    return await this.handle(argumentBag, optionBag);
   }
 
   /**
@@ -82,23 +76,6 @@ export abstract class Command {
    */
   protected abstract handle(args: ArgumentBag, options: OptionBag): Promise<number>;
 
-  protected handleRuntimeError(route: string, err: Error): number {
-    this.io.space();
-    this.io.error(`Error: ${err.message}`);
-    this.io.space();
-
-    // When the exception is because command has not been called correctly,
-    // help must be showed
-    if (err instanceof CLIException && err.printHelp) {
-      this.printHelp(route);
-      return 1;
-    }
-
-    // If the error is unknown or unexpected, show stack
-    this.io.errLn(err.stack);
-    return 1;
-  }
-
   /**
    * Parse input arguments based on arguments and options expected
    *
@@ -137,12 +114,12 @@ export abstract class Command {
   }
 
   /**
-   * Prints command route path, description and its usage.
+   * Print out command help
    *
    * @param route
    * @protected
    */
-  protected printHelpHeader(route: string): void {
+  protected printHelp(route: string[]): void {
     // Generate command usage based on arguments and options expected
     const generateUsage: (route: string) => string = (route: string) => {
       return `${route} ${this.argumentDefs.map((arg) => `[${arg.name}]`).join('')}${
@@ -150,22 +127,14 @@ export abstract class Command {
       }`;
     };
 
-    this.io.write(`${route}`, { bold: true, color: [217, 119, 6] });
+    this.io.write(`${route.join(' ')}`, { bold: true, color: [217, 119, 6] });
     this.io.writeLn(`: ${this.getDescription()}`);
-    this.io.writeLn(`${' '.repeat(2)}${chalk.bold(`Usage:`)} ${generateUsage(route)}`);
     this.io.space();
-  }
+    this.io.writeLn(`${' '.repeat(2)}${chalk.bold(`Usage:`)} ${generateUsage(route.join(' '))}`);
+    this.io.space();
 
-  /**
-   * Print out command help
-   *
-   * @param route
-   * @protected
-   */
-  protected printHelp(route: string): void {
-    this.printHelpHeader(route);
     if (this.argumentDefs.length > 0) {
-      this.io.writeLn(`${' '.repeat(2)}Command arguments:`);
+      this.io.writeLn(`${' '.repeat(2)}Command arguments:`, { bold: false, color: [217, 119, 6] });
 
       buildGrid(
         this.argumentDefs.map((arg) => [
@@ -180,7 +149,7 @@ export abstract class Command {
     }
 
     if (this.optionDefs.length > 0) {
-      this.io.writeLn(`${' '.repeat(2)}Available options:`);
+      this.io.writeLn(`${' '.repeat(2)}Available options:`, { bold: false, color: [217, 119, 6] });
 
       buildGrid(
         this.optionDefs.map((opt) => [[opt.name].concat(opt.aliases).join(','), opt.description]),

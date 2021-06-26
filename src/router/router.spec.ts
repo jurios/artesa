@@ -1,4 +1,4 @@
-import { Router, RouteResult } from './route';
+import { Router, RouteResult } from './router';
 import { Command } from '../command/command';
 import { CommandNotFoundException } from '../exceptions/command-not-found.exception';
 
@@ -18,6 +18,7 @@ describe(Router.name, () => {
       expect(router.route(['item'])).toStrictEqual<RouteResult>({
         target: TestCommand,
         argv: [],
+        routePath: ['item'],
       });
     });
 
@@ -31,6 +32,7 @@ describe(Router.name, () => {
       expect(router.route(['item', 'other'])).toStrictEqual<RouteResult>({
         target: TestCommand,
         argv: [],
+        routePath: ['item', 'other'],
       });
     });
 
@@ -44,6 +46,7 @@ describe(Router.name, () => {
       expect(router.route(['item', '--option', 'other', 'arg1'])).toStrictEqual<RouteResult>({
         target: TestCommand,
         argv: ['--option', 'arg1'],
+        routePath: ['item', 'other'],
       });
     });
 
@@ -57,6 +60,7 @@ describe(Router.name, () => {
       expect(router.route(['item', 'other', 'arg1', '--opt1'])).toStrictEqual<RouteResult>({
         target: TestCommand,
         argv: ['arg1', '--opt1'],
+        routePath: ['item', 'other'],
       });
     });
 
@@ -72,6 +76,7 @@ describe(Router.name, () => {
           other: TestCommand,
         },
         argv: ['--opt1'],
+        routePath: ['item'],
       });
     });
 

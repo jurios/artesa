@@ -6,6 +6,7 @@ import { Routes } from './routes';
 export type RouteResult = {
   target: CommandClass | Routes;
   argv: string[];
+  routePath: string[];
 };
 
 export class Router {
@@ -36,6 +37,7 @@ export class Router {
         return {
           target: routes[commandPath] as CommandClass,
           argv: result._,
+          routePath: parentPath.concat(commandPath),
         };
       }
 
@@ -45,12 +47,13 @@ export class Router {
       }
 
       if (!routes[commandPath]) {
-        throw new CommandNotFoundException(commandPath);
+        throw new CommandNotFoundException(parentPath.concat(commandPath).join(' '));
       }
     } else {
       return {
         target: routes as Routes,
         argv: result._,
+        routePath: parentPath,
       };
     }
 

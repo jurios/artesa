@@ -32,6 +32,18 @@ describe(InputParser.name, () => {
       expect(t).toThrow(InputArgumentException);
     });
 
+    it('should bypass input parsing if input contains --help or -h', () => {
+      const argDef: INormalizedArgument = createMockINormalizedArgument('arg1');
+      argDef.required = true;
+
+      const [argumentBag, optionsBag] = InputParser.parse(['-h'], [argDef], []);
+
+      expect(Object.keys(argumentBag['items'])).toHaveLength(0);
+      expect(Object.keys(optionsBag['items'])).toHaveLength(2);
+      expect(optionsBag.has('-h')).toBeTruthy();
+      expect(optionsBag.has('--help')).toBeTruthy();
+    });
+
     it('should not cast value if value is undefined', () => {
       const argDef: INormalizedArgument = createMockINormalizedArgument('arg1');
       argDef.type = Number; //should fail if arg1 is undefined

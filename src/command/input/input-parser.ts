@@ -20,6 +20,15 @@ export class InputParser {
     options: InputParserOptions = {},
   ) {
     try {
+      if (input.includes('-h') || input.includes('--help')) {
+        this.arguments = new ArgumentBag();
+        this.options = new OptionBag({
+          '-h': true,
+          '--help': true,
+        });
+        return;
+      }
+
       const result: arg.Result<arg.Spec> = arg(buildArgSpec(optDefs), {
         argv: input,
         permissive: options.permissive ?? false,
