@@ -10,21 +10,40 @@ import { Routes } from './router/routes';
 import { InputArgumentException } from './exceptions/input-argument.exception';
 
 export class CLI {
-  protected readonly _router: Router;
-  public readonly name: string;
-  protected constructor(public readonly routes: Routes, public readonly io: IInputOutput) {
-    this._router = new Router(routes);
-    this.name = 'Artesa';
+  protected _router: Router;
+  protected _name: string;
+  protected _io: IInputOutput;
+
+  protected constructor(protected readonly _routes: Routes, protected readonly _filename: string) {
+    this._router = new Router(this._routes);
+    this._io = new InputOutput();
+    this._name = this._filename;
+  }
+
+  get io(): IInputOutput {
+    return this._io;
+  }
+
+  get name(): string {
+    return this._name;
+  }
+
+  public withIO(io: IInputOutput): this {
+    this._io = io;
+    return this;
+  }
+
+  public withName(name: string): this {
+    this._name = name;
+    return this;
   }
 
   /**
-   * Run a command
+   * Run a command.
    *
-   * @inheritDoc
-   * @param filename
    * @param argv
    */
-  public async run(filename: string, argv: string[]): Promise<number> {
+  public async run(argv: string[]): Promise<number> {
     try {
       const routeResult: RouteResult = this._router.route(argv);
 
@@ -41,7 +60,7 @@ export class CLI {
         this.io.space();
         this.io.error(e.message);
         this.io.space();
-        this.printRoutingHelp([filename]);
+        this.printRoutingHelp([this._filename]);
         return 1;
       }
 
@@ -89,7 +108,7 @@ export class CLI {
    * @protected
    */
   protected getRoutesBelowPath(routePath: string[]): Routes {
-    let pointer: Routes = this.routes;
+    let pointer: Routes = this._routes;
 
     routePath.forEach((node) => {
       pointer = pointer[node] as Routes;
@@ -105,14 +124,7 @@ export class CLI {
     );
   }
 
-  static execute(
-    routes: Routes,
-    argv: string[],
-    io: IInputOutput = new InputOutput(),
-  ): Promise<number> {
-    const cli: CLI = new this(routes, io);
-    const filename: string = path.basename(argv[1]);
-
-    return cli.run(filename, argv.slice(2));
+  static init(routes: Routes): CLI {
+    return new this(routes, path.basename(process.argv[1]));
   }
 }

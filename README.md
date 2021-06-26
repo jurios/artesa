@@ -25,25 +25,25 @@ import { CLI } from 'artesa'
 
 CLI.execute({
   //Routes
-}, process.argv).then(r => r).catch(e => console.error(e));
+}).run(process.argv.slice(2))
+  .then(r => r)
+  .catch(e => console.error(e));
 ```
 In *artesa*, CLI works like a router. You provide a list of "paths" and which `commands` must be called for each *path*.
 We'll see how to define `routes` later on the next section.
 
-When we call to `execute()`, CLI will call the suitable command based on the `routes` provided, and the user input
-(usually, `process.argv`).
+When we call to `run()`, CLI will run the suitable command based on the input provided.
+Usually for CLIs, `process.argv` is used as input. In case you use `process.argv`, be sure to remove the first
+two elements as they refer to the `node` and script path.
 
-Notice in the example we are using `typescript`. We must compile our entrypoint before use it.
-
-For the time being, we can try it without using any command (it will print the help):
+For the time being, we can try it calling CLI without any command (it will print the help):
 
 ```shell
 node cli
 ```
 
 ## Registering Commands
-A command is a class which contains the logic to perform a specific action in the CLI.
-You must create a command for each action your CLI provides. Let's see an example:
+A command is a class which contains the logic to perform a specific action in the CLI. Let's see an example:
 
 ```typescript
 import { Command } from 'artesa';
@@ -59,13 +59,15 @@ export class SampleCommand extends Command {
 
 A command must implement the `handle()` method where stays the *action* logic.
 This is a quite simple command which just prints out a message in a green-boxed style (we'll see output helpers later).
-However, commands can be as complex as the action it is implementing requires: Establish connections, performs async calls...
+However, commands can be as complex as the action it is implementing requires. Notice `handle()` returns a `Promise` thus
+you can perform `async` calls.
 
 ### Registering the command
-Once we have a command created, we must register it into the CLI we defined before. As we explained before, CLI works
+Once we have a command created, we must register it into the CLI we defined before. As we explained previously, CLI works
 like a *router*. Commands are registered with a *"path"* to call them. Let's modify our entrypoint to register our command:
 
 As we want to call our command with `node cli sample`, this will be how CLI entrypoint should look like:
+
 ```typescript
 //cli.ts
 import { CLI } from 'artesa'
@@ -73,7 +75,9 @@ import { SampleCommand } from './commands/sample.command'
 
 CLI.execute({
   'sample': SampleCommand
-}, process.argv).then(r => r).catch(e => console.error(e));
+}).run(process.argv.slice(2))
+  .then(r => r)
+  .catch(e => console.error(e));
 ```
 
 That's it. Now `SampleCommand.handle()` will be called with:
@@ -89,11 +93,11 @@ node cli
 ```
 
 The command `path` cannot contain whitespaces. You can use other kind of separators (for instance, `:`:  `sample:one`)
-or use command grouping which is explained in the next section.
+or use nested commands which is explained in the next section.
 
-### Command grouping
-Sometimes commands are tightly related. For instance, `create`, `update` and `destroy` a car.
-In this case, would be really nice to be able to create command paths like:
+### Nested commands
+Sometimes commands are tightly related. For instance, if we have a `Car` model in our project, we might need
+`create`, `update` and `destroy` a `Car`. In this scenario, would be really nice to be able to create command paths like:
 
 ```
 cli cars create
@@ -101,20 +105,7 @@ cli cars update
 cli cars destroy
 ```
 
-This is some kind of hierarchy, right?. You have a cli which runs a command (`cars`) which might perform other
-actions itself (`create`, `update` and `destroy`):
-
-```typescript
-cli
- |- sample
- |- cars
-     |- create
-     |- update
-     |- destroy
-```
-
-This kind of hierarchy routing can be implemented through command grouping.
-
+This can be done using nested commands in our route list.
 First, create the commands which performs the actions as explained in the above section:
 
 ```typescript
@@ -123,52 +114,33 @@ export class UpdateCarCommand extends Command {...}
 export class DestroyCarCommand extends Command {...}
 ```
 
-Then, create our `car` command group:
-
-```typescript
-import { CommandGroup } from 'artesa';
-import { CreateCarCommand } from './commands/cars/car-create.command'
-import { UpdateCarCommand } from './commands/cars/car-update.command'
-import { DestroyCarCommand } from './commands/cars/car-destroy.command'
-
-export class CarCommandGroup extends CommandGroup {
-  readonly routes: Routes = {
-    'create': CreateCarCommand,
-    'update': UpdateCarCommand,
-    'destroy': DestroyCarCommand
-  }
-}
-```
-As you can see, a `CommandGroup` does not contain any logic. Only a list of `route`s.
-
-Notice we are defining a "routing" here like we did in the CLI. Actually, CLI is a `CommandGroup` with special powers!
-
-Finally, instead of registering each commands on the CLI, only the group must be registered.
+Then, let's register them in our entrypoint as nested commands:
 
 ```typescript
 //cli.ts
 import { CLI } from 'artesa'
 import { SampleCommand } from './commands/sample.command';
-import { CarCommandGroup } from './commands/cars/cars.group-command'
+import { CreateCarCommand } from './commands/cars/create.command'
+import { UpdateCarCommand } from './commands/cars/update.command'
+import { DestroyCarCommand } from './commands/cars/destroy.command'
+
 CLI.execute({
   'sample': SampleCommand,
-  'cars': CarCommandGroup,
-}, process.argv).then(r => r).catch(e => console.error(e));
+  'cars': {
+    'create': CreateCarCommand,
+    'update': UpdateCarCommand,
+    'destroy': DestroyCarCommand
+  },
+}).run(process.argv.slice(2))
+  .then(r => r)
+  .catch(e => console.error(e));
 ```
 
-That's all. Everything is ready. You can check it over printing the help:
+That's it, if we call to the CLI help we'll see our nested commands:
 
 ```shell
 node cli --help // or just node cli
 node cli cars --help // or just node cars
-```
-
-Or just call your new commands:
-
-```shell
-node cli cars create
-node cli cars update
-node cli cars destroy
 ```
 
 ### Command arguments
