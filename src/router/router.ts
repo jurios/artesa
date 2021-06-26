@@ -47,7 +47,7 @@ export class Router {
       }
 
       if (!routes[commandPath]) {
-        throw new CommandNotFoundException(parentPath.concat(commandPath).join(' '));
+        throw new CommandNotFoundException(parentPath.concat(commandPath));
       }
     } else {
       return {
