@@ -1,4 +1,6 @@
-import { CommandHelpTree } from '../generate-command-help-tree';
+import { Routes } from '../../router/routes';
+import { CommandClass } from '../../command/command';
+import { InputOutput } from '../input-output';
 
 export type Cell = string | null | undefined;
 export type Row = Cell[];
@@ -33,8 +35,8 @@ function getCellLengths(rows: Row[]): number[] {
 export function buildGrid(rows: Row[], spaceBetween = 8): Grid {
   const lengths: number[] = getCellLengths(rows);
 
-  return rows.map((line) => {
-    return line.map((column, index) => {
+  return rows.map((row) => {
+    return row.map((column, index) => {
       return (
         (typeof column === 'string' ? column : '').padEnd(lengths[index]) + ' '.repeat(spaceBetween)
       );
@@ -43,21 +45,22 @@ export function buildGrid(rows: Row[], spaceBetween = 8): Grid {
 }
 
 /**
- * Generates a "graphical" tree based on the commands and subcommands from the tree.
+ * Generates a text-based "graphical" tree based on routes provided.
  *
- * @param help
+ * @param routes
+ * @param ident
  */
-export function buildCommandHelpTreeGrid(help: CommandHelpTree, ident = 2): Grid {
-  function parseCommandHelp(level: number, help: CommandHelpTree, result: Row[]): Row[] {
-    Object.keys(help).forEach((route: string) => {
-      if (typeof help[route] === 'string') {
+export function buildCLIRoutesTree(routes: Routes, ident = 2): Grid {
+  function parseCommandHelp(level: number, routes: Routes, result: Row[]): Row[] {
+    Object.keys(routes).forEach((route: string) => {
+      if (typeof routes[route] === 'function') {
         result.push([
           ' '.repeat(ident * level) + (level > 0 ? '└ ' : '') + route,
-          help[route] as string,
+          new (routes[route] as CommandClass)(new InputOutput()).getDescription(),
         ]);
       } else {
         result.push([' '.repeat(ident * level) + route, '']);
-        parseCommandHelp(level + 1, help[route] as CommandHelpTree, result);
+        parseCommandHelp(level + 1, routes[route] as Routes, result);
       }
     });
 
@@ -66,7 +69,7 @@ export function buildCommandHelpTreeGrid(help: CommandHelpTree, ident = 2): Grid
 
   const result: Row[] = [];
 
-  parseCommandHelp(0, help, result);
+  parseCommandHelp(0, routes, result);
 
   return buildGrid(result);
 }

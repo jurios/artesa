@@ -4,8 +4,7 @@ import * as path from 'path';
 import { Router, RouteResult } from './router/router';
 import { Command } from './command/command';
 import { CommandNotFoundException } from './exceptions/command-not-found.exception';
-import { buildCommandHelpTreeGrid } from './io/helpers/layout';
-import { generateCommandHelpTree } from './io/generate-command-help-tree';
+import { buildCLIRoutesTree } from './io/helpers/layout';
 import { Routes } from './router/routes';
 import { InputArgumentException } from './exceptions/input-argument.exception';
 
@@ -93,7 +92,7 @@ export class CLI {
 
     this.io.writeLn('Available commands:');
 
-    buildCommandHelpTreeGrid(generateCommandHelpTree(routes)).forEach((row) => {
+    buildCLIRoutesTree(routes).forEach((row) => {
       this.io.write(row[0], { bold: true, color: [217, 119, 6] });
       this.io.writeLn(row[1], { bold: false, color: [5, 150, 105] });
     });
