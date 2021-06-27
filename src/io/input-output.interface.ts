@@ -1,14 +1,6 @@
 import { TextStyle } from './text-renderer/text-renderer';
+import { QuestionType, ValidationCallback } from './ask/ask';
 
-export enum QuestionType {
-  String = 'string',
-  Number = 'number',
-  Boolean = 'boolean',
-  Secret = 'secret',
-}
-
-export type Answer<T> = { answer: T };
-export type ValidationCallback<T> = (value: T) => true | string;
 export interface IInputOutput {
   close(): void;
 
